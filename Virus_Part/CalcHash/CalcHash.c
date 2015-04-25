@@ -1,4 +1,6 @@
-//Author:Maslov Mikhail,MIPT DPQE 453 group
+//-----------------------------------------------------------------------------------------
+//Authors: Maslov Mikhail, Sokolov Igor, Bolotin Petr, Kaloshin Pavel.
+//-----------------------------------------------------------------------------------------
 
 // CalcHash.cpp : additional code, that allows us to calculate function hash by its name.
 

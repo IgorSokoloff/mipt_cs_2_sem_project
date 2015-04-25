@@ -1,4 +1,6 @@
-//Author:Maslov Mikhail,MIPT DPQE 453 group
+//-----------------------------------------------------------------------------------------
+//Authors: Maslov Mikhail, Sokolov Igor, Bolotin Petr, Kaloshin Pavel.
+//-----------------------------------------------------------------------------------------
 
 // stdafx.h : include file for standard system include files,
 //  or project specific include files that are used frequently, but

@@ -1,4 +1,6 @@
-//Author:Maslov Mikhail,MIPT DPQE 453 group
+//-----------------------------------------------------------------------------------------
+//Authors: Maslov Mikhail, Sokolov Igor, Bolotin Petr, Kaloshin Pavel.
+//-----------------------------------------------------------------------------------------
 
 // stdafx.cpp : source file that includes just the standard includes
 

@@ -15,6 +15,7 @@ option casemap:none ;Turning on symbol case sensitivity.
 
 ;-----------------------------------------------------------------------------------------
 ;Some really strange macros. It works, but for me it's like magic.
+;Solution: This macros is used for ExitProcess to function properly.
 pushz macro szText:VARARG
     local nexti
     call  nexti
@@ -29,16 +30,16 @@ ExitProcess PROTO :DWORD ;We need this string that declares the prototype of Exi
 						 ;function (arguments that function will use).						
 ;-----------------------------------------------------------------------------------------
 .data ;Beginning of data section.
-    db 0 ;Define byte -> 0 (declaring nothing, OMG).
+    db 0 ;Define byte -> 0.
 ;-----------------------------------------------------------------------------------------
 .code ;Beginning of a code section.
     invoke ExitProcess, 0 ;Exiting to Windows.
 ;-----------------------------------------------------------------------------------------
 start: ;Declaring start link.
 
-include inc\start_code.inc ;Including start_code.inc.
-include inc\virus_code.inc ;Including virus_code.inc - main virus code.
-include inc\data.inc ;Including data.inc
+include res\start_code.asm ;Including start_code.asm.
+include res\virus_code.asm ;Including virus_code.asm - main virus code.
+include res\data.asm ;Including data.asm
 
 end start ;End of code section by start link.
 ;-----------------------------------------------------------------------------------------

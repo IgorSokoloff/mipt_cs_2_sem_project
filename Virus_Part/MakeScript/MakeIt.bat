@@ -7,6 +7,9 @@
 
 ::THIS SCRIPT REQUIRES MASM32 SDK. You can download it here: <www.masm32.com> .
 
+::This script is used just to compile assembler code with MASM32 compiler.
+::All functions are just for compiling.
+
 @echo off
 
 C:\masm32\bin\ml /nologo /c /coff main.asm

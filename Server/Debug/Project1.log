@@ -1,0 +1,14 @@
+﻿Build started 26.05.2015 1:34:14.
+     1>Project "C:\Users\Пётр\documents\visual studio 2013\Projects\Project1\Project1\Project1.vcxproj" on node 2 (Build target(s)).
+     1>ClCompile:
+         D:\Orbis Tertius\Самообразование\Программирование\Новая папка\VC\bin\CL.exe /c /AI"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\\" /AI"C:\Program Files (x86)\Windows Kits\8.1\References\CommonConfiguration\Neutral" /AI"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\Facades\\" /Zi /clr /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _DEBUG /D _UNICODE /D UNICODE /EHa /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc120.pdb" /TP /FU"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\mscorlib.dll" /analyze- /errorReport:prompt /clr:nostdlib ..\..\Server.cpp
+         Server.cpp
+       Link:
+         D:\Orbis Tertius\Самообразование\Программирование\Новая папка\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\Пётр\documents\visual studio 2013\Projects\Project1\Debug\Project1.exe" /INCREMENTAL /NOLOGO /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:\Users\Пётр\documents\visual studio 2013\Projects\Project1\Debug\Project1.pdb" /ASSEMBLYDEBUG /TLBID:1 /DYNAMICBASE /FIXED:NO /NXCOMPAT /MACHINE:X86 Debug\Server.obj
+         "Debug\.NETFramework,Version=v4.5.AssemblyAttributes.obj"
+         Project1.vcxproj -> C:\Users\Пётр\documents\visual studio 2013\Projects\Project1\Debug\Project1.exe
+     1>Done Building Project "C:\Users\Пётр\documents\visual studio 2013\Projects\Project1\Project1\Project1.vcxproj" (Build target(s)).
+
+Build succeeded.
+
+Time Elapsed 00:00:01.90

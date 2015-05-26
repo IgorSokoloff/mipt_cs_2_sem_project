@@ -29,9 +29,10 @@
 #define CHECK_TIME	t_time2 = clock()/CLOCKS_PER_SEC; \
 if (t_time2 - t_time1 >= MIN_DIFF)\
 					{fputs("\n", file); \
+					t = time(NULL); \
+					t_m = localtime(&t); \
 					fputs(asctime(t_m), file); \
-					t_time1 = t_time2; }\
-					//time		
+					t_time1 = clock() / CLOCKS_PER_SEC; }\	
 
 
 
